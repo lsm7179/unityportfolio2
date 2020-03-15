@@ -13,8 +13,6 @@ public class PlayerCtrl : SingletonMonobehavior<PlayerCtrl>
     public enum PlayerState { Idle, Walk, Run, Attack, Skill,DashSkill,Die };
     [Header("플레이어 상태")]
     public PlayerState myState = PlayerState.Idle;
-    public float hpcur = 0f;//현재체력  
-    public float mpcur = 0f;//현재마력
 
     public enum FighterAttackState { Attack1, Attack2, Attack3, Attack4 };
     [Header("공격 상태")]
@@ -70,8 +68,6 @@ public class PlayerCtrl : SingletonMonobehavior<PlayerCtrl>
 
     private Animation myAnimation = null;
 
-    [Header("아이템 줍기")]
-    public InventoryCtrl inventoryCtrl;
 
     [Header("음악 효과")]
     public AudioClip attackAudio = null;
@@ -107,11 +103,16 @@ public class PlayerCtrl : SingletonMonobehavior<PlayerCtrl>
 
         attackAudio = Resources.Load<AudioClip>("Sounds/sword_throw");
         skillAudio = Resources.Load<AudioClip>("Sounds/Big_Explosion_Distant2");
-        hpcur = User.Instance.hp;
-        mpcur = User.Instance.mp;
 
 
-    }                                         
+        //포션관련 불러오기
+        hpPotionNum.text=PlayerPrefs.GetString("hpPotionNum");
+        mpPotionNum.text=PlayerPrefs.GetString("mpPotionNum");
+        mpBar.fillAmount = (User.Instance.mpcur / User.Instance.mp);
+        hpBar.fillAmount = (User.Instance.hpcur / User.Instance.hp);
+
+
+}                                         
     void FixedUpdate()
     {
         Move();
@@ -124,9 +125,10 @@ public class PlayerCtrl : SingletonMonobehavior<PlayerCtrl>
 
     private void OnTriggerEnter(Collider other)
     {
+        //아이템 줍기
         if (other.gameObject.CompareTag("Item"))
         {
-            inventoryCtrl.AcquireItem(other.gameObject.GetComponent<Itemgem>());
+            InventoryCtrl.Instance.AcquireItem(other.gameObject.GetComponent<Itemgem>());
             Destroy(other.gameObject);
         }
     }
@@ -306,7 +308,8 @@ public class PlayerCtrl : SingletonMonobehavior<PlayerCtrl>
     /// </summary>
     public void OnSkill()
     {
-        if (skillcool||mpcur<20)//쿨타임 중이거나 마나가 모자르다면
+        
+        if (skillcool||User.Instance.mpcur<20)//쿨타임 중이거나 마나가 모자르다면
         {
             skillText.gameObject.SetActive(true);
             Invoke("TextDisable", 1.5f);
@@ -329,7 +332,7 @@ public class PlayerCtrl : SingletonMonobehavior<PlayerCtrl>
         {
             return;
         }
-        if (dashcool||mpcur < 20)//쿨타임 중이거나 마나가 모자르다면
+        if (dashcool||User.Instance.mpcur < 20)//쿨타임 중이거나 마나가 모자르다면
         {
             skillText.gameObject.SetActive(true);
             Invoke("TextDisable", 1.5f);
@@ -547,7 +550,7 @@ public class PlayerCtrl : SingletonMonobehavior<PlayerCtrl>
     //Hp 포션
     public void HpUp()
     {
-        if (hpchk||int.Parse(hpPotionNum.text) <= 0|| hpcur >= User.Instance.hp)
+        if (hpchk||int.Parse(hpPotionNum.text) <= 0|| User.Instance.hpcur >= User.Instance.hp)
         {
             return;
         }
@@ -562,21 +565,23 @@ public class PlayerCtrl : SingletonMonobehavior<PlayerCtrl>
         while (temp <= cool)
         {
             temp += Time.deltaTime;
-            if (hpcur <= User.Instance.hp)
+            if (User.Instance.hpcur <= User.Instance.hp)
             {
-                hpcur += 10 * Time.deltaTime;
-                hpBar.fillAmount = (hpcur / User.Instance.hp);
+                User.Instance.hpcur += 10 * Time.deltaTime;
+                hpBar.fillAmount = (User.Instance.hpcur / User.Instance.hp);
             }
             bar.fillAmount = (temp / cool);
             yield return new WaitForFixedUpdate();
         }
+        User.Instance.SaveStat("hpcur", User.Instance.hpcur);//저장
+        User.Instance.SaveStat("hpPotionNum", hpPotionNum.text);//저장
         hpchk = false;
     }
 
     //Mp 포션
     public void MpUp()
     {
-        if (mpchk|| int.Parse(mpPotionNum.text)<=0 || mpcur >= User.Instance.mp)
+        if (mpchk|| int.Parse(mpPotionNum.text)<=0 || User.Instance.mpcur >= User.Instance.mp)
         {
             return;
         }
@@ -591,31 +596,37 @@ public class PlayerCtrl : SingletonMonobehavior<PlayerCtrl>
         while (temp <= cool)
         {
             temp += Time.deltaTime;
-            if (mpcur <= User.Instance.mp)
+            if (User.Instance.mpcur <= User.Instance.mp)
             {
-                mpcur += 7 * Time.deltaTime;
-                mpBar.fillAmount = (mpcur / User.Instance.mp);
+                User.Instance.mpcur += 7 * Time.deltaTime;
+                mpBar.fillAmount = (User.Instance.mpcur / User.Instance.mp);
             }
             bar.fillAmount = (temp / cool);
             yield return new WaitForFixedUpdate();
         }
+        User.Instance.SaveStat("mpcur", User.Instance.mpcur);//저장
+        User.Instance.SaveStat("mpPotionNum", mpPotionNum.text);//저장
         mpchk = false;
     }
 
     //mp 소모
     public void MpUse()
     {
-        mpcur -= 20;
-        mpBar.fillAmount = (mpcur / User.Instance.mp);
+        User.Instance.mpcur -= 20;
+        mpBar.fillAmount = (User.Instance.mpcur / User.Instance.mp);
+        User.Instance.SaveStat("mpcur", User.Instance.mpcur);//저장
+        User.Instance.SaveStat("mpPotionNum", mpPotionNum.text);//저장
     }
 
     //hp 소모
     public void HpMinus(float minus)
     {
-        hpcur -= minus;
-        hpBar.fillAmount = (hpcur / User.Instance.hp);
+        User.Instance.hpcur -= minus;
+        hpBar.fillAmount = (User.Instance.hpcur / User.Instance.hp);
+        User.Instance.SaveStat("hpcur", User.Instance.hpcur);//저장
+        User.Instance.SaveStat("hpPotionNum", hpPotionNum.text);//저장
         DamageTweenEffect();
-        if(hpcur <= 0f)
+        if(User.Instance.hpcur <= 0f)
         {
             Die();
         }
@@ -669,6 +680,10 @@ public class PlayerCtrl : SingletonMonobehavior<PlayerCtrl>
             gameOverImg.color = fadeColor;
             yield return null;
         }
+        User.Instance.hp = User.Instance.hpcur;
+        User.Instance.mp = User.Instance.mpcur;
+        User.Instance.SaveStat("hpcur", User.Instance.hpcur);//스탯 초기화
+        User.Instance.SaveStat("mpcur", User.Instance.mpcur);//스탯 초기화
         Time.timeScale = 0f;
         yield return null;
     }

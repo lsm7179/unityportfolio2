@@ -321,7 +321,7 @@ public class Monsters : MonoBehaviour
 
 	/// <summary>
 	/// die -> 오브젝트풀 -> wait ->idle
-	/// 캔버스 , hp 초기화, 내비게이션 초기화
+	/// 캔버스 , hp 초기화, 내비게이션 초기화 경험치 획득
 	/// </summary>
 	protected void Die()
 	{
@@ -337,9 +337,7 @@ public class Monsters : MonoBehaviour
 		{
 			return;
 		}
-		User.Instance.exp += expgive;
-		User.Instance.expImg.fillAmount = ((float)User.Instance.exp / User.Instance.levelexp[User.Instance.level - 1]);
-		User.Instance.CheckLevel();
+		User.Instance.expPlus(expgive);
 	}
 
 	/// <summary>

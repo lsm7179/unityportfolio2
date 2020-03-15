@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+
+
+
 public class IventorySlot : MonoBehaviour
 {
 
@@ -12,7 +15,7 @@ public class IventorySlot : MonoBehaviour
 
     [SerializeField]
     private Text text_Count;
-    
+
     /// <summary>
     /// 이미지 투명도 조절
     /// </summary>
@@ -34,10 +37,9 @@ public class IventorySlot : MonoBehaviour
         itemname = _item.itemName;
         itemImage.sprite = _item.itemIcon;
         itemCount += _count;
-
         text_Count.text = itemCount.ToString();
-
         SetColor(1);
+        
     }
 
     /// <summary>
@@ -53,7 +55,7 @@ public class IventorySlot : MonoBehaviour
         {
             ClearSlot();
         }
-
+        
     }
 
     /// <summary>
